@@ -11,5 +11,7 @@ describe 'prefixes histogram' do
     (prefix_list).should_not be_empty
   end
 
-  it 'outputs a file of prefixes'
+  it 'outputs a file of prefixes' do
+    File.read('../histogram.txt').should_not be_empty
+  end
 end
