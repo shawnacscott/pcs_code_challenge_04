@@ -6,8 +6,9 @@ describe 'prefixes histogram' do
     expect(File).to exist('../raw_customers.txt')
   end
 
-  it 'creates a hash of prefixes' do
-    (PrefixHash.new.prefix_hash).empty?
+  it 'creates a list of prefixes' do
+    prefix_list = PrefixHash.new.find_prefix('../raw_customers.txt')
+    (prefix_list).should_not be_empty
   end
 
   it 'outputs a file of prefixes'
