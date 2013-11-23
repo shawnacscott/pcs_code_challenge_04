@@ -1,20 +1,14 @@
-require 'optparse'
-require 'CSV'
+    
+print "prefix, first_name, middle, last_name, suffix, phone_number, phone_extension"
 
-# Clean and split data from raw_customers.txt
-class CleanedData
-  def initialize
-    @csv_array = []
-  end
-
-  def create_csv
-    File.open('../raw_customers.txt', 'r') do |file|
-      file.each { |line| @csv_array << [line] }
+    while line = gets
+      prefix = (/^\S*/).match(line)
+      first_name = ""
+      middle_name = ""
+      # [middle_name | middle_initial] = ""
+      last_name = ""
+      suffix = ""
+      phone_number = ""
+      phone_extension = ""
+      puts "#{prefix}, #{first_name}, #{middle_name}, #{last_name}, #{suffix}, #{phone_number}, #{phone_extension}"
     end
-    CSV.open('../customers.csv', 'w') do |csv|
-      @csv_array.each { |line| csv << line }
-    end
-  end
-end
-
-# CleanedData.new.create_csv
