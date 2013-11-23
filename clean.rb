@@ -1,24 +1,21 @@
 require 'optparse'
+require 'CSV'
 
-class Cleaned
+# Clean and split data from raw_customers.txt
+class CleanedData
+  def initialize
+    @csv_array = []
+  end
 
-    def createCSV
-        File.open('./raw_customers.txt', 'r') do |file|
-            file.each { |line| file.write('./customers.csv')}
-        end
+  def create_csv
+    File.open('./raw_customers.txt', 'r') do |file|
+      file.each { |line| @csv_array << [line] }
     end
-
+    print @csv_array
+    CSV.open('./customers.csv', 'w') do |csv|
+      @csv_array.each { |line| csv << line }
+    end
+  end
 end
 
-test = Cleaned.new.createCSV
-
-
-
-# ruby clean.rb --prefixes prefix_words.txt --input raw_customers.txt --output customers.csv
-# ruby clean.rb -p prefix_words.txt -i raw_customers.txt -o customers.csv
-# ruby clean.rb -h 
-# ruby clean.rb --help
-
-
-
-
+CleanedData.new.create_csv

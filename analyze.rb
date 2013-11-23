@@ -18,9 +18,9 @@ class PrefixHash
       @prefix = @prefix.to_s
       add_to_hash
     end
-    @prefix_hash = Hash[@prefix_hash.sort_by {|k, v| v }.reverse]
-    File.open('./histogram.txt', 'w') do |file| 
-      @prefix_hash.each { |k, v| file.write("#{k} #{v}" + "\n")}
+    @prefix_hash = Hash[@prefix_hash.sort_by { |k, v| v }.reverse]
+    File.open('./histogram.txt', 'w') do |file|
+      @prefix_hash.each { |k, v| file.write("#{k} #{v}" + "\n") }
     end
   end
 end
