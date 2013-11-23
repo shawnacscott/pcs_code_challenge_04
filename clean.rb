@@ -8,14 +8,13 @@ class CleanedData
   end
 
   def create_csv
-    File.open('./raw_customers.txt', 'r') do |file|
+    File.open('../raw_customers.txt', 'r') do |file|
       file.each { |line| @csv_array << [line] }
     end
-    print @csv_array
-    CSV.open('./customers.csv', 'w') do |csv|
+    CSV.open('../customers.csv', 'w') do |csv|
       @csv_array.each { |line| csv << line }
     end
   end
 end
 
-CleanedData.new.create_csv
+# CleanedData.new.create_csv
