@@ -1,4 +1,5 @@
 require './spec_helper.rb'
+require '../clean.rb'
 
 def test_name
   name_example = File.open'./input.txt', 'w'
@@ -6,19 +7,10 @@ def test_name
   name_example.puts 'Tamara Witting V (738)753-1810 x561'
   name_example.close
   expected_file = File.open './expected_output.csv', 'w'
+  expected_file.puts 'prefix,first_name,middle,last_name,suffix,phone_number,phone_extension'
   expected_file.puts 'Mr.,Waylon,Elisa,Kozey-Kuhic,III,+1.776.953.9374,'
   expected_file.puts ',Tamara,,Witting,V,+1.738.753.1810,561'
   expected_file.close
-end
-
-def name_parts
-  expected_output = CSV.read('./expected_output.csv')
-  output = CSV.read('./output.csv')
-  # for (x = 0, x < expected_output.first.length, x += 1) do
-  #   expected_output.first[x] == output.first[x]
-    
-  # end
-
 end
 
 def delete_files

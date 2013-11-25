@@ -1,4 +1,5 @@
 require './spec_helper.rb'
+require '../analyze.rb'
 
 describe 'prefixes histogram' do
 
@@ -6,12 +7,9 @@ describe 'prefixes histogram' do
     expect(File).to exist('../raw_customers.txt')
   end
 
-  it 'creates a list of prefixes' do
-    prefix_list = PrefixHash.new.find_prefix('../raw_customers.txt')
-    (prefix_list).should_not be_empty
-  end
-
   it 'outputs a file of prefixes' do
+    `ruby ../analyze.rb < ../raw_customers.txt > ../histogram.txt`
     File.read('../histogram.txt').should_not be_empty
+    FileUtils.rm ('../histogram.txt')
   end
 end

@@ -1,14 +1,15 @@
-    
-print "prefix, first_name, middle, last_name, suffix, phone_number, phone_extension"
+print 'prefix,first_name,middle,last_name,suffix,phone_number,phone_extension'
 
-    while line = gets
-      prefix = (/^\S*/).match(line)
-      first_name = ""
-      middle_name = ""
-      # [middle_name | middle_initial] = ""
-      last_name = ""
-      suffix = ""
-      phone_number = ""
-      phone_extension = ""
-      puts "#{prefix}, #{first_name}, #{middle_name}, #{last_name}, #{suffix}, #{phone_number}, #{phone_extension}"
-    end
+prefix_words = File.open('./prefix_words.txt', 'r').to_a
+prefix_words.map! { |prefix| prefix.chomp }
+
+while line = gets
+  prefix = (/^\S*/).match(line)
+  first_name = ""
+  middle_name = ""
+  last_name = ""
+  suffix = ""
+  phone_number = ""
+  phone_extension = ""
+  puts "#{prefix},#{first_name},#{middle_name},#{last_name},#{suffix},#{phone_number},#{phone_extension}"
+end
