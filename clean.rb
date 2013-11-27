@@ -5,30 +5,33 @@ require 'pry'
 
 options = {}
 OptionParser.new do |opts|
-  opts.banner = 'Usage: clean.rb [options]'
+  opts.banner = 'Usage: `<filename.rb> [options]`'
 
-  opts.on('-h', '--[no-]help', 'Run help') do |h|
-    options[:help] = h
-    puts 'Here\'s some information about how to use me!'
+  opts.on('-h', '--help', 'List available options and flags') do |h|
+    puts opts
   end
 
-  opts.on('-p', '--prefixes PREFIXES', 'Read in prefixes') do |prefix|
+  opts.on('-p', '--prefixes PREFIXES',
+          'Read in prefixes; must be followed by a file name') do |prefix|
     options[:prefix] = prefix    
     prefix_words = File.open("./#{options[:prefix]}", 'r').to_a
     prefix_words.map! { |prefix| prefix.chomp }
     options[:prefix_words] = prefix_words
   end
 
-  opts.on('-i', '--input INPUT', 'Read in input') do |input|
+  opts.on('-i', '--input INPUT',
+          'Read in raw data; must be followed by a file name') do |input|
     options[:input] = input
     options[:raw_customers] = File.open("./#{options[:input]}", 'r')
   end
 
-  opts.on('-o', '--output OUTPUT', 'Write to output file') do |output|
+  opts.on('-o', '--output OUTPUT',
+          'Write to output file; must be followed by a file name') do |output|
     options[:output] = output
   end
 
-  opts.on('-s', '--suffixes SUFFIXES', 'Read in suffixes') do |suffix|
+  opts.on('-s', '--suffixes SUFFIXES',
+          'Read in suffixes; must be followed by a file name') do |suffix|
     options[:suffix] = suffix
     suffix_words = File.open("./#{options[:suffix]}", 'r').to_a
     suffix_words.map! { |suffix| suffix.chomp }
@@ -56,7 +59,7 @@ class LineParser
     if prefix_words.include?(@possible_prefix)
       @prefix = @possible_prefix
       @parts_of_name = /^\S*(.*)/.match(parts_of_name)
-      @parts_of_name = @parts_of_name[1].to_s.strip
+      @parts_of_name = @parts_of_name[1].to_s.strip # return MatchData capture
     else
       @prefix = ''
       @parts_of_name = parts_of_name
@@ -97,7 +100,7 @@ class LineParser
   end
 end
 
-print 'prefix,first_name,middle,last_name,suffix,phone_number,phone_extension'
+# print 'prefix,first_name,middle,last_name,suffix,phone_number,phone_extension'
 
 while line = options[:raw_customers].gets
   line_parser = LineParser.new
