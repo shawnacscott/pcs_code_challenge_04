@@ -39,9 +39,10 @@ OptionParser.new do |opts|
   end
 end.parse!
 
+# Cleans and categorizes incoming data
 class LineParser
   attr_accessor :parts_of_name
-  attr_reader :prefix, :first_name, :middle_name, :last_name, 
+  attr_reader :prefix, :first_name, :middle_name, :last_name,
               :suffix, :phone_number, :extension
 
   def initialize
@@ -94,30 +95,49 @@ class LineParser
       @middle_name = ''
       @first_name = ''
     end
-    @last_name
-    @middle_name
-    @first_name
+  end
+
+  def phone_number?(parts_of_phone_number)
+    @split_phone_number = /\sx/.match(parts_of_phone_number)
+    if @split_phone_number.nil?
+      @phone_number = parts_of_phone_number.strip.gsub!(/\D/, '.')
+    else
+      @phone_number = @split_phone_number.pre_match.gsub!(/\D/, '.')
+      @extension = @split_phone_number.post_match.strip
+    end
+    if @phone_number.match(/^\./).nil? && @phone_number.match(/^1\./).nil?
+      @phone_number = '1.' + @phone_number
+    elsif @phone_number.match(/^\./)
+      @phone_number = '1' + @phone_number
+    else
+      @phone_number
+    end
   end
 end
 
-
-
 CSV.open("./#{options[:output]}", 'wb') do |csv|
-  csv << %w[prefix first_name middle last_name suffix phone_number phone_extension]
+  csv << %w[prefix first_name middle last_name suffix phone_number
+            phone_extension]
   while line = options[:raw_customers].gets
     line_parser = LineParser.new
 
     split_line = (/\t/).match(line)
     parts_of_name = split_line.pre_match
     parts_of_phone_number = split_line.post_match
+
     line_parser.prefix?(parts_of_name, options[:prefix_words])
     parts_of_name = line_parser.parts_of_name
     line_parser.suffix?(parts_of_name, options[:suffix_words])
     parts_of_name = line_parser.parts_of_name
     line_parser.rest_of_name?(parts_of_name)
+    line_parser.phone_number?(parts_of_phone_number)
 
-    csv << %W[#{line_parser.prefix} #{line_parser.first_name} 
-            #{line_parser.middle_name} #{line_parser.last_name}
-            #{line_parser.suffix}]
+    csv << %W[#{line_parser.prefix}
+              #{line_parser.first_name}
+              #{line_parser.middle_name}
+              #{line_parser.last_name}
+              #{line_parser.suffix}
+              #{line_parser.phone_number}
+              #{line_parser.extension}]
   end
 end

@@ -10,6 +10,6 @@ describe 'prefixes histogram' do
   it 'outputs a file of prefixes' do
     `ruby ../analyze.rb < ../raw_customers.txt > ../histogram.txt`
     File.read('../histogram.txt').should_not be_empty
-    FileUtils.rm ('../histogram.txt')
+    FileUtils.rm('../histogram.txt')
   end
 end
