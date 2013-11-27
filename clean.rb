@@ -1,7 +1,7 @@
 #! /usr/bin/env ruby
 
 require 'optparse'
-require 'pry'
+require 'csv'
 
 options = {}
 OptionParser.new do |opts|
@@ -13,7 +13,7 @@ OptionParser.new do |opts|
 
   opts.on('-p', '--prefixes PREFIXES',
           'Read in prefixes; must be followed by a file name') do |prefix|
-    options[:prefix] = prefix    
+    options[:prefix] = prefix
     prefix_words = File.open("./#{options[:prefix]}", 'r').to_a
     prefix_words.map! { |prefix| prefix.chomp }
     options[:prefix_words] = prefix_words
@@ -100,18 +100,24 @@ class LineParser
   end
 end
 
-# print 'prefix,first_name,middle,last_name,suffix,phone_number,phone_extension'
 
-while line = options[:raw_customers].gets
-  line_parser = LineParser.new
 
-  parts_of_record = (/(.*)\t/).match(line)
-  parts_of_name = parts_of_record[1].to_s
-  line_parser.prefix?(parts_of_name, options[:prefix_words])
-  parts_of_name = line_parser.parts_of_name
-  line_parser.suffix?(parts_of_name, options[:suffix_words])
-  parts_of_name = line_parser.parts_of_name
-  line_parser.rest_of_name?(parts_of_name)
+CSV.open("./#{options[:output]}", 'wb') do |csv|
+  csv << %w[prefix first_name middle last_name suffix phone_number phone_extension]
+  while line = options[:raw_customers].gets
+    line_parser = LineParser.new
 
-  puts "#{line_parser.prefix},#{line_parser.first_name},#{line_parser.middle_name},#{line_parser.last_name},#{line_parser.suffix}"
+    split_line = (/\t/).match(line)
+    parts_of_name = split_line.pre_match
+    parts_of_phone_number = split_line.post_match
+    line_parser.prefix?(parts_of_name, options[:prefix_words])
+    parts_of_name = line_parser.parts_of_name
+    line_parser.suffix?(parts_of_name, options[:suffix_words])
+    parts_of_name = line_parser.parts_of_name
+    line_parser.rest_of_name?(parts_of_name)
+
+    csv << %W[#{line_parser.prefix} #{line_parser.first_name} 
+            #{line_parser.middle_name} #{line_parser.last_name}
+            #{line_parser.suffix}]
+  end
 end
