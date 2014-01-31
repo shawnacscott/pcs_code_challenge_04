@@ -1,8 +1,7 @@
 histogram = Hash.new(0)
 
 while line = gets
-  prefix = (/^\S*/).match(line)
-  prefix = prefix.to_s
+  prefix = (/^\S*/).match(line).to_s
   histogram[prefix.to_sym] += 1
 end
 

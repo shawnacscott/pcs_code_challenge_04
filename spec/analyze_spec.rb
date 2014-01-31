@@ -1,5 +1,4 @@
 require 'spec_helper.rb'
-require './analyze.rb'
 
 describe 'prefixes histogram' do
 
