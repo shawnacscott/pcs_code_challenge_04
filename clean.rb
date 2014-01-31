@@ -2,6 +2,7 @@
 
 require 'optparse'
 require 'csv'
+require 'pry'
 
 options = {}
 OptionParser.new do |opts|
@@ -41,103 +42,92 @@ end.parse!
 
 # Cleans and categorizes incoming data
 class LineParser
-  attr_accessor :parts_of_name
-  attr_reader :prefix, :first_name, :middle_name, :last_name,
-              :suffix, :phone_number, :extension
 
-  def initialize
-    @prefix = ''
-    @first_name = ''
-    @middle_name = ''
-    @last_name = ''
-    @suffix = ''
-    @phone_number = ''
-    @extension = ''
+  def initialize(options)
+    @prefix_words = options[:prefix_words]
+    @suffix_words = options[:suffix_words]
+    @parsed = {}
   end
 
-  def prefix?(parts_of_name, prefix_words)
-    @possible_prefix = (/^\S*/).match(parts_of_name).to_s
-    if prefix_words.include?(@possible_prefix)
-      @prefix = @possible_prefix
-      @parts_of_name = /^\S*(.*)/.match(parts_of_name)
-      @parts_of_name = @parts_of_name[1].to_s.strip # return MatchData capture
-    else
-      @prefix = ''
-      @parts_of_name = parts_of_name
-    end
+  def parse(line)
+    split(line)
+    name_build
+    phone?(@phone_parts)
+    @parsed
   end
 
-  def suffix?(parts_of_name, suffix_words)
-    @pre_suffix = (/\S*$/).match(parts_of_name)
-    @possible_suffix = @pre_suffix.to_s
-    if suffix_words.include?(@possible_suffix)
-      @suffix = @possible_suffix
-      @parts_of_name = /(.*)\S*$/.match(parts_of_name)
-      @parts_of_name = @pre_suffix.pre_match.strip
-    else
-      @suffix = ''
-      @parts_of_name = parts_of_name
-    end
+  def split(line)
+    split_line = (/\t/).match(line)
+    serialize(split_line)
   end
 
-  def rest_of_name?(parts_of_name)
-    @parts_of_name = parts_of_name.split(' ')
-    if @parts_of_name.length == 3
-      @last_name = @parts_of_name.pop
-      @middle_name = @parts_of_name.pop
-      @first_name = @parts_of_name.pop
-    elsif @parts_of_name.length == 2
-      @last_name = @parts_of_name.pop
-      @middle_name = ''
-      @first_name = @parts_of_name.pop
-    else
-      @last_name = @parts_of_name.pop
-      @middle_name = ''
-      @first_name = ''
-    end
+  def serialize(split_line)
+    parts_of_name = split_line.pre_match.to_s
+    @name_parts = parts_of_name.split(' ')
+    parts_of_phone_number = split_line.post_match.to_s
+    @phone_parts = parts_of_phone_number.split(' ')
   end
 
-  def phone_number?(parts_of_phone_number)
-    @split_phone_number = /\sx/.match(parts_of_phone_number)
-    if @split_phone_number.nil?
-      @phone_number = parts_of_phone_number.strip.gsub!(/\D/, '.')
-    else
-      @phone_number = @split_phone_number.pre_match.gsub!(/\D/, '.')
-      @extension = @split_phone_number.post_match.strip
-    end
-    if @phone_number.match(/^\./).nil? && @phone_number.match(/^1\./).nil?
-      @phone_number = '1.' + @phone_number
-    elsif @phone_number.match(/^\./)
-      @phone_number = '1' + @phone_number
-    else
-      @phone_number
-    end
+  def name_build
+    @parsed[:prefix] = prefix?(@name_parts.first, @prefix_words)
+    @parsed[:suffix] = suffix?(@name_parts.last, @suffix_words)
+    @parsed[:last] = @name_parts.pop
+    rest_of_name?(@name_parts)
   end
+
+  def prefix?(possible_prefix, prefix_words)
+    if prefix_words.include?(possible_prefix)
+      @name_parts.delete_at(0)
+      prefix = possible_prefix
+    else
+      prefix = ''
+    end
+    prefix
+  end
+
+  def suffix?(possible_suffix, suffix_words)
+    if suffix_words.include?(possible_suffix)
+      @name_parts.pop
+      suffix = possible_suffix
+    else
+      suffix = ''
+    end
+    suffix
+  end
+
+  def rest_of_name?(name_parts)
+    @parsed[:middle] = (name_parts.length == 2 ? @name_parts.pop : '')
+    @parsed[:first] = (name_parts.length >= 1 ? @name_parts.pop : '')
+  end
+
+  def phone?(phone_parts)
+    phone_parts = phone_parts.each { |x| x.gsub!(/\D/, '.') }
+    case phone_parts.first.length
+    when 14
+      @parsed[:phone] = phone_parts.first
+    when 13
+      @parsed[:phone] = '1' + phone_parts.first
+    when 12
+      @parsed[:phone] = '1.' + phone_parts.first
+    end
+    @parsed[:extension] = (phone_parts.length == 2 ? phone_parts.pop.sub!(/^./, '') : '' )
+  end
+
 end
 
 CSV.open("./#{options[:output]}", 'wb') do |csv|
   csv << %w[prefix first_name middle last_name suffix phone_number
             phone_extension]
   while line = options[:raw_customers].gets
-    line_parser = LineParser.new
+    line_parser = LineParser.new(options)
+    parsed_hash = line_parser.parse(line)
 
-    split_line = (/\t/).match(line)
-    parts_of_name = split_line.pre_match
-    parts_of_phone_number = split_line.post_match
-
-    line_parser.prefix?(parts_of_name, options[:prefix_words])
-    parts_of_name = line_parser.parts_of_name
-    line_parser.suffix?(parts_of_name, options[:suffix_words])
-    parts_of_name = line_parser.parts_of_name
-    line_parser.rest_of_name?(parts_of_name)
-    line_parser.phone_number?(parts_of_phone_number)
-
-    csv << %W[#{line_parser.prefix}
-              #{line_parser.first_name}
-              #{line_parser.middle_name}
-              #{line_parser.last_name}
-              #{line_parser.suffix}
-              #{line_parser.phone_number}
-              #{line_parser.extension}]
+    csv << %W[#{parsed_hash[:prefix]}
+              #{parsed_hash[:first]}
+              #{parsed_hash[:middle]}
+              #{parsed_hash[:last]}
+              #{parsed_hash[:suffix]}
+              #{parsed_hash[:phone]}
+              #{parsed_hash[:extension]}]
   end
 end
